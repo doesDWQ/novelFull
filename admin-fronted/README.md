@@ -9,6 +9,9 @@ yarn create react-app admin-fronted --template typescript
 如果没用安装yarn，先使用npm安装
 yarn add antd
 
+安装路由
+yarn add react-router-dom@6
+
 
 
 
