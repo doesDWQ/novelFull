@@ -15,3 +15,7 @@ npm install --save react react-dom @types/react @types/react-dom
 npm install --save-dev typescript awesome-typescript-loader source-map-loader
 awesome-typescript-loader：webpack编译typescript插件
 source-map-loader： source-map-loader使用TypeScript输出的sourcemap文件来告诉webpack何时生成 自己的sourcemaps
+
+安装ui框架：
+如果没用安装yarn，先使用npm安装
+yarn add antd
