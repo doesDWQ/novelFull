@@ -24,10 +24,10 @@ function getItem(
 }
 
 const items: MenuItem[] = [
-    getItem('首页','index', null),
-    getItem('用户管理', 'user', null, [
-        getItem('管理员管理', 'user/users'),
-        getItem('普通用户管理', 'user/adminUsers'),
+    getItem('首页','/index', null),
+    getItem('用户管理', '/user', null, [
+        getItem('管理员管理', '/users'),
+        getItem('普通用户管理', '/adminUsers'),
     ]),
 
     // getItem('Navigation Two', 'sub2', <AppstoreOutlined />, [
@@ -53,7 +53,7 @@ const Navigation: React.FC = () => {
     const onClick: MenuProps['onClick'] = e => {
         console.log('click ', e);
         setCurrent(e.key);
-        navigate('/' + e.key)
+        navigate(e.key)
     };
 
     return (

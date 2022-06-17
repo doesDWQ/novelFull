@@ -6,7 +6,8 @@ import Users from "./components/homepage/Users/Users";
 import AdminUsers from "./components/homepage/AdminUsers/AdminUsers";
 import {Login} from "./components/login/Login";
 import {LoginOut} from "./components/loginout/LoginOut";
-
+import {IndexPage} from './components/homepage/IndexPage/IndexPage';
+import {PageNotFound} from "./components/PageNotFound/PageNotFound";
 
 function App() {
   return (
@@ -17,20 +18,17 @@ function App() {
                       <Route path="/" element={<HomePage />} >
                           <Route path="users" element={<Users />} />
                           <Route path="adminUsers" element={<AdminUsers />} />
+                          <Route path="index" element={<IndexPage />} />
                           <Route
                               index
-                              element={<Users />}
+                              element={<IndexPage />}
                           />
                       </Route>
                       <Route path="login" element={<Login />} />
                       <Route path="loginOut" element={<LoginOut />} />
                       <Route
                           path="*"
-                          element={
-                              <main style={{ padding: "1rem" }}>
-                                  <p>There's nothing here!</p>
-                              </main>
-                          }
+                          element={ <PageNotFound /> }
                       />
                   </Routes>
               </BrowserRouter>
