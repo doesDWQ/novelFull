@@ -1,0 +1,6 @@
+{
+    "gopls": {
+        "build.experimentalWorkspaceModule": true,
+        "ui.completion.experimentalPostfixCompletions": true
+    }
+}

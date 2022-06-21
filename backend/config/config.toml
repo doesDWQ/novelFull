@@ -1,0 +1,10 @@
+[server]
+	host 		= '0.0.0.0'
+	port 		= '8855'
+
+[postgres]
+	host 		= 'localhost'
+	user 		= 'postgres'
+	passwrod 	= 'abc.123A'
+	dbname 		= 'novel'
+	port 		= '4352'

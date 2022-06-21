@@ -1,0 +1,18 @@
+version: "3.4"
+
+volumes:
+  pgdata:
+    driver: local
+
+services:
+  db:
+    image: postgres:alpine3.16
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: abc.123A
+    ports:
+      - 4352:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always

@@ -1,7 +1,7 @@
 import { Col, Row } from 'antd';
 import React from 'react';
 import './index.css'
-import Navigation from "./body/Navigation";
+import Navigation from "./Navigation/Navigation";
 import {Link, Outlet} from "react-router-dom";
 
 // row 下分成24等分的col
