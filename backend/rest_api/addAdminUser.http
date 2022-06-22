@@ -1,0 +1,10 @@
+POST http://localhost:8855/admin/users HTTP/1.1
+content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJRCI6MSwidXNlcl9uYW1lIjoiZHdxIiwiYWRtaW4iOnRydWUsImV4cCI6MTY1NjA0Mzc4NH0.ndntvGnYpOqZ6_lYFYNIieTwXZwyBnkfkJcSBEuVVhA
+
+{
+    "username":"admin8",
+    "passwrod":"1234562",
+    "email":"admin@qq.com",
+    "token":"123"
+}

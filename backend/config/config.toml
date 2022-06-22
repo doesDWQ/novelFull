@@ -8,3 +8,7 @@
 	passwrod 	= 'abc.123A'
 	dbname 		= 'novel'
 	port 		= '4352'
+
+[jwt]
+	secret 		= 'novel#@$^123'
+	contextKey  = 'user'

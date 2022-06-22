@@ -8,4 +8,5 @@ gorm:
 https://gorm.io/zh_CN/docs/associations.html
 
 echo:
-https://echo.laily.net/guide/request/
+https://echo.labstack.com/guide/request/ (官方)
+https://echo.laily.net/guide/request/ 

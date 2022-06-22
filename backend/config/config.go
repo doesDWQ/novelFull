@@ -13,6 +13,7 @@ type (
 	config struct {
 		Server   *server
 		PostGres *postgres
+		Jwt      *jwt
 	}
 
 	server struct {
@@ -26,6 +27,11 @@ type (
 		Passwrod string
 		Dbname   string
 		Port     string
+	}
+
+	jwt struct {
+		Secret     string
+		ContextKey string
 	}
 )
 
