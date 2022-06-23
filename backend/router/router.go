@@ -45,7 +45,7 @@ func RegisterRoutes(e *echo.Echo) {
 	)
 
 	for firstPath, secondRouter := range controllers {
-		// 注册第一次路由组
+		// 注册第一级路由组
 		nextGroup := g.Group(firstPath)
 		// 注册第二层路由组
 		for secondPath, sonRouterFunc := range secondRouter {
