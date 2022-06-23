@@ -8,21 +8,37 @@ import (
 	"github.com.doesDWQ.novelFull/config"
 	"github.com.doesDWQ.novelFull/db"
 	"github.com.doesDWQ.novelFull/model"
-	"github.com.doesDWQ.novelFull/service"
+	"github.com.doesDWQ.novelFull/service/commonService"
+	"github.com.doesDWQ.novelFull/types"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 )
 
 type loginService struct {
-	service.CommonService
+	commonService.CommonService
 }
 
-func NewLoginService() *loginService {
-	return &loginService{}
+func NewLoginService(g *echo.Group) types.Service {
+	service := &loginService{}
+	service.CommonService = commonService.CommonService{
+		Routes: []*types.Route{
+			{
+				RequestFunc: g.POST,
+				Path:        "/login",
+				Func:        service.login,
+				// 登录接口需要跳过权限校验
+				SkipVerify: true,
+			},
+		},
+	}
+	// 注册子路由
+	// e.POST("/login", service.login)
+	// e.GET("/logout", service.loginOut)
+	return service
 }
 
-func (l *loginService) Login(c echo.Context) error {
+func (l *loginService) login(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 
@@ -46,7 +62,7 @@ func (l *loginService) Login(c echo.Context) error {
 	}
 
 	// Set custom claims
-	claims := &service.AdminJwtCustomClaims{
+	claims := &commonService.AdminJwtCustomClaims{
 		UserId:   user.ID,
 		UserName: user.UserName,
 		Admin:    true,
@@ -76,59 +92,9 @@ func (l *loginService) Login(c echo.Context) error {
 	})
 }
 
-// 校验token是否存在
-func (l *loginService) VerifyToken(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		if l.SkipVerify(c) {
-			// 过权限校验
-			return next(c)
-		}
-
-		// 校验token
-		cs := service.CommonService{}
-		userId, token := cs.GetTokenInfo(c)
-		user := &model.AdminUser{
-			Model: gorm.Model{
-				ID: userId,
-			},
-		}
-
-		err := db.Db.Where(user).First(user).Error
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return l.Error(c, "用户id不存在")
-			}
-			return err
-		}
-
-		// token为空表示未登录，token和表里面的token没有对照上也是登录错误
-		if user.Token == "" && user.Token != token.Raw {
-			// token校验不存在则报错
-			return l.Error(c, "用户信息校验失败")
-		}
-
-		return next(c)
-	}
-}
-
-// 跳过权限校验的路由
-func (l *loginService) SkipVerify(c echo.Context) bool {
-	skipApis := map[string]struct{}{
-		"/admin/login": {},
-	}
-
-	url := c.Request().URL.String()
-
-	if _, exists := skipApis[url]; exists {
-		return true
-	}
-
-	return false
-}
-
 // 退出接口
-func (l *loginService) LoginOut(c echo.Context) error {
-	cs := service.CommonService{}
+func (l *loginService) loginOut(c echo.Context) error {
+	cs := commonService.CommonService{}
 	userId, _ := cs.GetTokenInfo(c)
 
 	user := &model.AdminUser{Model: gorm.Model{
