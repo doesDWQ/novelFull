@@ -22,7 +22,7 @@ func NewCustomValidator() *customValidator {
 
 // Validate implements echo.Validator 暂时只校验map格式数据
 func (cv *customValidator) Validate(i interface{}) error {
-	data := i.(MapValidate)
+	data := i.(*MapValidate)
 	errMap := cv.validator.ValidateMap(
 		data.Value,
 		data.Rules,

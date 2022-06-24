@@ -1,4 +1,4 @@
-package admin
+package loginService
 
 import (
 	"errors"
@@ -16,36 +16,57 @@ import (
 )
 
 type loginService struct {
-	commonService.CommonService
+	commonService.Service
 }
 
 func NewLoginService(g *echo.Group) types.Service {
 	service := &loginService{}
-	service.CommonService = commonService.CommonService{
+	service.Service = commonService.Service{
+		Model: func() interface{} {
+			return nil
+		},
+		ListModel: func() interface{} {
+			return nil
+		},
+		SearchApiModel: func() interface{} {
+			return nil
+		},
+		AddRules:  map[string]interface{}{},
+		EditRules: map[string]interface{}{},
 		Routes: []*types.Route{
 			{
 				RequestFunc: g.POST,
-				Path:        "/login",
-				Func:        service.login,
+				Path:        "/adminLogin",
+				Func:        service.adminLogin,
 				// 登录接口需要跳过权限校验
 				SkipVerify: true,
 			},
+			{
+				RequestFunc: g.POST,
+				Path:        "/adminLoginout",
+				Func:        service.adminLoginOut,
+			},
+			{
+				RequestFunc: g.GET,
+				Path:        "/adminUserInfo",
+				Func:        service.adminUserInfo,
+			},
 		},
+		Group:        g,
+		AutoRegister: false,
 	}
-	// 注册子路由
-	// e.POST("/login", service.login)
-	// e.GET("/logout", service.loginOut)
 	return service
 }
 
-func (l *loginService) login(c echo.Context) error {
+// adminLogin 后台登录接口
+func (l *loginService) adminLogin(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 
 	// 查询用户名和密码是否匹配
 	user := &model.AdminUser{
 		UserName: username,
-		Passwrod: password,
+		Pwd:      password,
 	}
 
 	// Throws unauthorized error
@@ -62,7 +83,7 @@ func (l *loginService) login(c echo.Context) error {
 	}
 
 	// Set custom claims
-	claims := &commonService.AdminJwtCustomClaims{
+	claims := &commonService.JwtCustomClaims{
 		UserId:   user.ID,
 		UserName: user.UserName,
 		Admin:    true,
@@ -93,8 +114,8 @@ func (l *loginService) login(c echo.Context) error {
 }
 
 // 退出接口
-func (l *loginService) loginOut(c echo.Context) error {
-	cs := commonService.CommonService{}
+func (l *loginService) adminLoginOut(c echo.Context) error {
+	cs := commonService.Service{}
 	userId, _ := cs.GetTokenInfo(c)
 
 	user := &model.AdminUser{Model: gorm.Model{
@@ -110,7 +131,7 @@ func (l *loginService) loginOut(c echo.Context) error {
 }
 
 // 获取当前登录后台用户信息
-func (l *loginService) AdminUserInfo(c echo.Context) error {
+func (l *loginService) adminUserInfo(c echo.Context) error {
 	userId, _ := l.GetTokenInfo(c)
 
 	user := &model.AdminUser{

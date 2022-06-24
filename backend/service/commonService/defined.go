@@ -10,7 +10,8 @@ type RegisterRouterFunc func(g *echo.Group) interface{}
 
 // 结构体定义
 type (
-	CommonService struct {
+	Service struct {
+		// 必须参数
 		// 获取原始model的方法
 		Model func() interface{}
 		// 列表model
@@ -23,11 +24,22 @@ type (
 		EditRules map[string]interface{}
 		// 注册路由
 		Routes []*types.Route
+		// 当前所属路由组
+		Group *echo.Group
+
+		// 非必须参数
 		// 是否自动注册默认的增删改查等接口
 		AutoRegister bool
+
+		// 默认注册路由
+		defaultRoutes []*types.Route
+		// 一次性注册的所有路由
+		allRoutes []*types.Route
+		// 标记路由是否注册过了
+		registedRoutes bool
 	}
 
-	AdminJwtCustomClaims struct {
+	JwtCustomClaims struct {
 		UserId   uint   `json:user_id`
 		UserName string `json:"user_name"`
 		Admin    bool   `json:"admin"`

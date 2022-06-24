@@ -1,0 +1,8 @@
+GET http://localhost:8855/admin/adminUser  HTTP/1.1
+content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjI4LCJ1c2VyX25hbWUiOiJhZG1pbiIsImFkbWluIjp0cnVlLCJleHAiOjE2NTYzMzM3OTN9.ZjAu3ksFs-L_UbgT61rHopJD5FEWtKyR443JD_W5Hw0
+
+{
+    "page": "1",
+    "pageSize": "10"
+}

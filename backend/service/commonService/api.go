@@ -1,6 +1,7 @@
 package commonService
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -8,8 +9,9 @@ import (
 )
 
 // Add 新增
-func (common *CommonService) AddAPi(c echo.Context) error {
-	if data, err := common.DealParam(c, common.AddRules); err != nil {
+func (common *Service) AddAPi(c echo.Context) error {
+	data, err := common.DealParam(c, common.AddRules)
+	if err != nil {
 		return err
 	} else {
 		return common.add(data)
@@ -17,7 +19,7 @@ func (common *CommonService) AddAPi(c echo.Context) error {
 }
 
 // Detail 详情
-func (common *CommonService) DetailApi(c echo.Context) error {
+func (common *Service) DetailApi(c echo.Context) error {
 
 	id := c.Param("id")
 
@@ -42,7 +44,7 @@ func (common *CommonService) DetailApi(c echo.Context) error {
 }
 
 // Delete 删除
-func (common *CommonService) DeleteApi(c echo.Context) error {
+func (common *Service) DeleteApi(c echo.Context) error {
 	id := c.Param("id")
 
 	idInt, err := strconv.Atoi(id)
@@ -59,14 +61,18 @@ func (common *CommonService) DeleteApi(c echo.Context) error {
 }
 
 // List 列表
-func (common *CommonService) ListApi(c echo.Context) error {
+func (common *Service) ListApi(c echo.Context) error {
 	// 获取分页信息
 	pageInfo, err := common.getPageInfo(c)
 	if err != nil {
 		return err
 	}
 
-	listData, count, query := common.getListQuery(pageInfo)
+	listData, count, query, err := common.getListQuery(pageInfo)
+	if err != nil {
+		return err
+	}
+
 	err = query.Error
 	if err != nil {
 		return err
@@ -84,11 +90,16 @@ func (common *CommonService) ListApi(c echo.Context) error {
 }
 
 // Edit 编辑, 需要处理为可按需更新
-func (common *CommonService) EditApi(c echo.Context) error {
+func (common *Service) EditApi(c echo.Context) error {
 	// 编辑时必须要传递id
-	id := c.Param("id")
+	idString := c.Param("id")
+	id, err := strconv.Atoi(idString)
+	if err != nil {
+		return errors.New("id convert failed")
+	}
 
-	if data, err := common.DealParam(c, common.AddRules); err != nil {
+	data, err := common.DealParam(c, common.AddRules)
+	if err != nil {
 		return err
 	} else {
 		return common.updateById(id, data)

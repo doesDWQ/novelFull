@@ -6,11 +6,11 @@ import (
 )
 
 // 成功的返回结构
-func (common *CommonService) Success(c echo.Context, data map[string]interface{}) error {
+func (common *Service) Success(c echo.Context, data map[string]interface{}) error {
 	return utilTool.Success(c, data)
 }
 
 // 失败的返回结构
-func (common *CommonService) Error(c echo.Context, errMsg string) error {
+func (common *Service) Error(c echo.Context, errMsg string) error {
 	return utilTool.Error(c, errMsg)
 }

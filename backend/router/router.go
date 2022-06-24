@@ -9,6 +9,7 @@ import (
 	"github.com.doesDWQ.novelFull/model"
 	"github.com.doesDWQ.novelFull/service/admin"
 	"github.com.doesDWQ.novelFull/service/commonService"
+	"github.com.doesDWQ.novelFull/service/loginService"
 	"github.com.doesDWQ.novelFull/types"
 	"github.com.doesDWQ.novelFull/utilTool"
 
@@ -17,74 +18,85 @@ import (
 	"gorm.io/gorm"
 )
 
-var controllers = map[string]map[string]func(e *echo.Group) types.Service{
-	"/admin": {
-		"/basic": admin.NewLoginService,
-	},
+// 路由这块还有很大的改进空间的，但是暂时先这样咯
+
+type GetServiceFunc func(e *echo.Group) types.Service
+type FirstRoute struct {
+	secondRoutes map[string]GetServiceFunc
+	middlewares  []echo.MiddlewareFunc
 }
 
 // 跳过权限校验的接口
-var skipApis = map[string]struct{}{
-	"/admin/basic/login": {},
-}
+var skipApis = map[string]struct{}{}
 
 // 注册路由
-func RegisterRoutes(e *echo.Echo) {
+func RegisterRoutes(e *echo.Echo) error {
 
-	// 后端路由
-	g := e.Group("/",
-		// 注册两个权限校验中间件
-		middleware.JWTWithConfig(middleware.JWTConfig{
-			// 跳过token校验接口
-			Skipper:    skipVerify,
-			Claims:     &commonService.AdminJwtCustomClaims{},
-			SigningKey: []byte(config.Config.Jwt.Secret),
-			ContextKey: config.Config.Jwt.ContextKey,
-		}),
-		verifyToken,
-	)
+	controllers := map[string]FirstRoute{
+		"/admin": {
+			secondRoutes: map[string]GetServiceFunc{
+				"/basic":     loginService.NewLoginService,
+				"/adminUser": admin.NewAdminUserService,
+			},
+			middlewares: []echo.MiddlewareFunc{
+				// 注册两个权限校验中间件
+				middleware.JWTWithConfig(middleware.JWTConfig{
+					// 跳过token校验接口
+					Skipper:    skipVerify,
+					Claims:     &commonService.JwtCustomClaims{},
+					SigningKey: []byte(config.Config.Jwt.Secret),
+					ContextKey: config.Config.Jwt.ContextKey,
+				}),
+				verifyToken,
+			},
+		},
+	}
 
-	for firstPath, secondRouter := range controllers {
+	for firstPath, firstRoute := range controllers {
 		// 注册第一级路由组
-		nextGroup := g.Group(firstPath)
+		nextGroup := e.Group(firstPath, firstRoute.middlewares...)
+		// fmt.Printf("一级路径路径：%s\n", firstPath)
 		// 注册第二层路由组
-		for secondPath, sonRouterFunc := range secondRouter {
+		for secondPath, sonRouterFunc := range firstRoute.secondRoutes {
+			// fmt.Printf("二级路径路径：%s\n", secondPath)
 			sonGroup := nextGroup.Group(secondPath)
 			service := sonRouterFunc(sonGroup)
 
 			// 注册第三级路由
-			for _, lastRoute := range service.GetRoutes() {
-				// 这里还可以返回下一级别的router，但是不处理了
-				lastRoute.RequestFunc(lastRoute.Path, lastRoute.Func)
+			thirdRoutes, err := service.GetRoutes()
+			if err != nil {
+				return fmt.Errorf(
+					"path:%s: %s",
+					fmt.Sprintf("%s%s", firstPath, secondPath), err.Error(),
+				)
+			}
+			for _, lastRoute := range thirdRoutes {
+				route := lastRoute.RequestFunc(lastRoute.Path, lastRoute.Func)
+				path := fmt.Sprintf("%s%s%s", firstPath, secondPath, lastRoute.Path)
+				fmt.Printf("当前注册路由: %s:%s\n", route.Method, path)
+
 				// 处理是否跳过
 				if lastRoute.SkipVerify {
-					path := fmt.Sprintf("%s%s%s", firstPath, secondPath, lastRoute.Path)
 					skipApis[path] = struct{}{}
 				}
 			}
-
-			// 处理是否自动注册，增删改查列表编辑接口
-			if service.GetAutoRegister() {
-				sonGroup.POST("/", service.AddAPi)
-				sonGroup.PUT("/:id", service.EditApi)
-				sonGroup.GET("/:id", service.DetailApi)
-				sonGroup.GET("/", service.ListApi)
-				sonGroup.DELETE("/:id", service.DeleteApi)
-			}
 		}
 	}
+
+	return nil
 }
 
 // 校验token是否存在
 func verifyToken(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+
 		if skipVerify(c) {
 			// 过权限校验
 			return next(c)
 		}
 
 		// 校验token
-		cs := commonService.CommonService{}
+		cs := commonService.Service{}
 		userId, token := cs.GetTokenInfo(c)
 		user := &model.AdminUser{
 			Model: gorm.Model{
@@ -114,7 +126,10 @@ func verifyToken(next echo.HandlerFunc) echo.HandlerFunc {
 func skipVerify(c echo.Context) bool {
 	url := c.Request().URL.String()
 
+	// fmt.Printf("当前调用到了，url:%s\n", url)
+	// fmt.Printf("skipApis:%#v\n", skipApis)
 	if _, exists := skipApis[url]; exists {
+		// fmt.Println("当前调用到了，需要跳过")
 		return true
 	}
 

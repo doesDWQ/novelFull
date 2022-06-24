@@ -1,6 +1,7 @@
 package commonService
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -15,8 +16,9 @@ import (
 // context 参数处理定义
 
 // Paginate 分页
-func (common *CommonService) Paginate(page, pageSize int) func(db *gorm.DB) *gorm.DB {
+func (common *Service) Paginate(page, pageSize int) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
+		fmt.Println("paginate")
 		if page == 0 {
 			page = 1
 		}
@@ -34,27 +36,27 @@ func (common *CommonService) Paginate(page, pageSize int) func(db *gorm.DB) *gor
 }
 
 // GetTokenInfo 获取token信息
-func (common *CommonService) GetTokenInfo(c echo.Context) (uint, *jwt.Token) {
+func (common *Service) GetTokenInfo(c echo.Context) (uint, *jwt.Token) {
 	i := c.Get(config.Config.Jwt.ContextKey)
 	token := i.(*jwt.Token)
 
-	claims := token.Claims.(*AdminJwtCustomClaims)
+	claims := token.Claims.(*JwtCustomClaims)
 
 	return claims.UserId, token
 }
 
 // DealParam 根据输入规则map 处理参数，返回处理校验后的map型数据
-func (common *CommonService) DealParam(c echo.Context, rules map[string]interface{}) (map[string]interface{}, error) {
+func (common *Service) DealParam(c echo.Context, rules map[string]interface{}) (map[string]interface{}, error) {
 	params := make(map[string]interface{})
-	if err := c.Bind(params); err != nil {
+	if err := c.Bind(&params); err != nil {
 		return nil, fmt.Errorf("bind err: %s", err)
 	}
 
-	fmt.Printf("%#v\n", params)
+	fmt.Printf("params: %#v\n", params)
 
 	if err := c.Validate(&validate.MapValidate{
 		Value: params,
-		Rules: common.AddRules,
+		Rules: rules,
 	}); err != nil {
 		return nil, common.Error(c, fmt.Sprintf("validate err: %s", err))
 	}
@@ -71,18 +73,26 @@ func (common *CommonService) DealParam(c echo.Context, rules map[string]interfac
 }
 
 // 获取分页信息
-func (common *CommonService) getPageInfo(c echo.Context) (*pageInfo, error) {
-	pageString := c.FormValue("page")
-	pageSizeString := c.FormValue("pageSize")
+func (common *Service) getPageInfo(c echo.Context) (*pageInfo, error) {
+	params := make(map[string]interface{})
+	if err := c.Bind(&params); err != nil {
+		return nil, fmt.Errorf("bind err: %s", err)
+	}
 
-	page, err := strconv.Atoi(pageString)
+	if params["page"] == nil || params["pageSize"] == nil {
+		return nil, errors.New("not get params: page and pageSize")
+	}
+
+	page, err := strconv.Atoi(params["page"].(string))
 	if err != nil {
 		return nil, err
 	}
-	pageSize, err := strconv.Atoi(pageSizeString)
+	pageSize, err := strconv.Atoi(params["pageSize"].(string))
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("%#v", params)
 
 	return &pageInfo{
 		Page:     page,

@@ -39,7 +39,10 @@ func main() {
 	})
 
 	// 注册路由
-	router.RegisterRoutes(e)
+	err = router.RegisterRoutes(e)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf("%s:%s", config.Config.Server.Host, config.Config.Server.Port)))
 }
