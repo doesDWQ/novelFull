@@ -10,11 +10,14 @@ import (
 
 // Add 新增
 func (common *Service) AddAPi(c echo.Context) error {
-	data, err := common.DealParam(c, common.AddRules)
+	data, err := common.DealParam(c, common.innerService.AddRules)
 	if err != nil {
 		return err
 	} else {
-		return common.add(data)
+		if err != nil {
+			return err
+		}
+		return common.innerService.Model().Add(common.innerService.Db, data)
 	}
 }
 
@@ -28,19 +31,15 @@ func (common *Service) DetailApi(c echo.Context) error {
 		return fmt.Errorf("detail strconv error: %s", err)
 	}
 
-	data, err := common.detail(idInt)
+	model := common.innerService.Model()
+	search, err := model.Detail(common.innerService.Db, idInt)
 	if err != nil {
-		return err
+		return common.Error(c, err)
+	} else {
+		return common.Success(c, map[string]interface{}{
+			"detail": search,
+		})
 	}
-	err = common.Success(c, map[string]interface{}{
-		"user": data,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Delete 删除
@@ -52,23 +51,20 @@ func (common *Service) DeleteApi(c echo.Context) error {
 		return err
 	}
 
-	err = common.deleteById(idInt)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	model := common.innerService.Model()
+	return common.Error(c, model.DeleteById(common.innerService.Db, idInt))
 }
 
 // List 列表
 func (common *Service) ListApi(c echo.Context) error {
 	// 获取分页信息
-	pageInfo, err := common.getPageInfo(c)
+	pageInfo, err := common.GetPageInfo(c)
 	if err != nil {
 		return err
 	}
 
-	listData, count, query, err := common.getListQuery(pageInfo)
+	model := common.innerService.Model()
+	listData, count, query, err := model.GetListQuery(common.innerService.Db, pageInfo)
 	if err != nil {
 		return err
 	}
@@ -98,10 +94,11 @@ func (common *Service) EditApi(c echo.Context) error {
 		return errors.New("id convert failed")
 	}
 
-	data, err := common.DealParam(c, common.AddRules)
+	data, err := common.DealParam(c, common.innerService.AddRules)
 	if err != nil {
 		return err
 	} else {
-		return common.updateById(id, data)
+		model := common.innerService.Model()
+		return common.Error(c, model.UpdateById(common.innerService.Db, id, data))
 	}
 }

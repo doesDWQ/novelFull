@@ -1,0 +1,19 @@
+### 后台用户当前登录信息
+GET  {{$dotenv host}}/admin/basic/adminUserInfo HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{$dotenv token}}
+
+
+### 后台用户登录
+POST {{$dotenv host}}/admin/basic/adminLogin HTTP/1.1
+content-type: application/json
+
+{
+    "user_name":"admin",
+    "pwd":"1234556"
+}
+
+### 后台用户退出
+POST {{$dotenv host}}/admin/basic/adminLoginout HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{$dotenv token}}

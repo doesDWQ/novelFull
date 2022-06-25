@@ -1,7 +1,7 @@
 package loginService
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -9,37 +9,23 @@ import (
 	"github.com.doesDWQ.novelFull/db"
 	"github.com.doesDWQ.novelFull/model"
 	"github.com.doesDWQ.novelFull/service/commonService"
-	"github.com.doesDWQ.novelFull/types"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 )
 
 type loginService struct {
 	commonService.Service
 }
 
-func NewLoginService(g *echo.Group) types.Service {
-	service := &loginService{}
-	service.Service = commonService.Service{
-		Model: func() interface{} {
-			return nil
-		},
-		ListModel: func() interface{} {
-			return nil
-		},
-		SearchApiModel: func() interface{} {
-			return nil
-		},
-		AddRules:  map[string]interface{}{},
-		EditRules: map[string]interface{}{},
-		Routes: []*types.Route{
+func NewLoginService(g *echo.Group) commonService.ServiceInterface {
+	service := loginService{}
+	service.InitInnerService(&commonService.InnerService{
+		Db: db.Db,
+		Routes: []*commonService.Route{
 			{
 				RequestFunc: g.POST,
 				Path:        "/adminLogin",
 				Func:        service.adminLogin,
-				// 登录接口需要跳过权限校验
-				SkipVerify: true,
 			},
 			{
 				RequestFunc: g.POST,
@@ -54,38 +40,43 @@ func NewLoginService(g *echo.Group) types.Service {
 		},
 		Group:        g,
 		AutoRegister: false,
-	}
+	})
 	return service
 }
 
 // adminLogin 后台登录接口
 func (l *loginService) adminLogin(c echo.Context) error {
-	username := c.FormValue("username")
-	password := c.FormValue("password")
+	params, err := l.DealParam(c, map[string]interface{}{
+		"user_name": "required",
+		"pwd":       "required",
+	})
 
-	// 查询用户名和密码是否匹配
-	user := &model.AdminUser{
-		UserName: username,
-		Pwd:      password,
-	}
-
-	// Throws unauthorized error
-	err := db.Db.Debug().Where(user).First(user).Error
+	fmt.Println("params:", params)
+	fmt.Println("adminLogin:", err)
 
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// 未查询到, 说明用户不存在
-			return l.Error(c, "登录错误")
-		} else {
-			// 未知错误报错
-			return err
-		}
+		fmt.Println("ggggggg:", err)
+		return err
 	}
+
+	adminUser := model.NewAdminUser()
+	searchModel, err := adminUser.FindByUsernamePwd(
+		db.Db,
+		params["user_name"].(string),
+		params["pwd"].(string),
+	)
+	if err != nil {
+		// 未知错误报错
+		return err
+	}
+
+	auSearch := searchModel.(*model.SearchAdminUserApi)
+	// fmt.Printf("auSearch:%#v\n", auSearch.ID)
 
 	// Set custom claims
 	claims := &commonService.JwtCustomClaims{
-		UserId:   user.ID,
-		UserName: user.UserName,
+		UserId:   auSearch.ID,
+		UserName: auSearch.UserName,
 		Admin:    true,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
@@ -101,9 +92,8 @@ func (l *loginService) adminLogin(c echo.Context) error {
 		return err
 	}
 
-	user.Token = t
 	// 更新token
-	err = db.Db.Save(user).Error
+	err = adminUser.UpdateTokenById(db.Db, auSearch.ID, t)
 	if err != nil {
 		return err
 	}
@@ -115,14 +105,10 @@ func (l *loginService) adminLogin(c echo.Context) error {
 
 // 退出接口
 func (l *loginService) adminLoginOut(c echo.Context) error {
-	cs := commonService.Service{}
-	userId, _ := cs.GetTokenInfo(c)
+	userId, _ := l.GetTokenInfo(c)
+	adminUser := model.NewAdminUser()
 
-	user := &model.AdminUser{Model: gorm.Model{
-		ID: userId,
-	}}
-
-	err := db.Db.Model(&user).Update("token", "").Error
+	err := adminUser.UpdateTokenById(db.Db, userId, "")
 	if err != nil {
 		return err
 	}
@@ -134,17 +120,13 @@ func (l *loginService) adminLoginOut(c echo.Context) error {
 func (l *loginService) adminUserInfo(c echo.Context) error {
 	userId, _ := l.GetTokenInfo(c)
 
-	user := &model.AdminUser{
-		Model: gorm.Model{ID: userId},
-	}
-
-	userInfo := &model.AdminUserApi{}
-	err := db.Db.Debug().Model(user).Where(user).Scan(userInfo).Error
+	adminUser := model.NewAdminUser()
+	search, err := adminUser.Detail(db.Db, int(userId))
 	if err != nil {
 		return err
 	}
 
 	return l.Success(c, map[string]interface{}{
-		"info": userInfo,
+		"info": search,
 	})
 }

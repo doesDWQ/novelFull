@@ -1,7 +1,0 @@
-POST http://localhost:8855/admin/basic/adminLogin HTTP/1.1
-content-type: application/json
-
-{
-    "username":"dwqadmin3",
-    "password":"1234556"
-}

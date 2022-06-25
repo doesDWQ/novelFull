@@ -30,6 +30,7 @@ func InitDb() error {
 	return nil
 }
 
+// 数据库迁移
 func migrate() {
 	Db.AutoMigrate(
 		&model.AdminUser{},

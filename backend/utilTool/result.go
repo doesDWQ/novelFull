@@ -16,10 +16,14 @@ func Success(c echo.Context, data map[string]interface{}) error {
 }
 
 // 失败的返回结构
-func Error(c echo.Context, errMsg string) error {
-	return c.JSON(http.StatusOK, echo.Map{
+func Error(c echo.Context, err error) error {
+	e := c.JSON(http.StatusOK, echo.Map{
 		"data":   nil,
 		"status": "0",
-		"msg":    errMsg,
+		"msg":    err.Error(),
 	})
+	if e != nil {
+		return e
+	}
+	return err
 }

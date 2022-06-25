@@ -6,34 +6,14 @@ import (
 	"strconv"
 
 	"github.com.doesDWQ.novelFull/config"
+	"github.com.doesDWQ.novelFull/types"
 	"github.com.doesDWQ.novelFull/validate"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
-	"gorm.io/gorm"
 )
 
 // context 参数处理定义
-
-// Paginate 分页
-func (common *Service) Paginate(page, pageSize int) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		fmt.Println("paginate")
-		if page == 0 {
-			page = 1
-		}
-
-		switch {
-		case pageSize > 100:
-			pageSize = 100
-		case pageSize <= 0:
-			pageSize = 10
-		}
-
-		offset := (page - 1) * pageSize
-		return db.Offset(offset).Limit(pageSize)
-	}
-}
 
 // GetTokenInfo 获取token信息
 func (common *Service) GetTokenInfo(c echo.Context) (uint, *jwt.Token) {
@@ -52,16 +32,20 @@ func (common *Service) DealParam(c echo.Context, rules map[string]interface{}) (
 		return nil, fmt.Errorf("bind err: %s", err)
 	}
 
-	fmt.Printf("params: %#v\n", params)
+	fmt.Printf("params: %#v,rules: %#v \n", params, rules)
 
-	if err := c.Validate(&validate.MapValidate{
+	err := c.Validate(&validate.MapValidate{
 		Value: params,
 		Rules: rules,
-	}); err != nil {
-		return nil, common.Error(c, fmt.Sprintf("validate err: %s", err))
+	})
+	fmt.Println("v2.error:", err)
+	if err != nil {
+		// 发送错误的相应
+		return nil, common.Error(c, fmt.Errorf("validate err: %s", err))
 	}
 
-	// 根据addRules取出所有需要保存的字段
+	fmt.Println("v3.error:", err)
+
 	data := make(map[string]interface{})
 	for k, _ := range rules {
 		if value, exists := params[k]; exists {
@@ -73,7 +57,7 @@ func (common *Service) DealParam(c echo.Context, rules map[string]interface{}) (
 }
 
 // 获取分页信息
-func (common *Service) getPageInfo(c echo.Context) (*pageInfo, error) {
+func (common *Service) GetPageInfo(c echo.Context) (*types.PageInfo, error) {
 	params := make(map[string]interface{})
 	if err := c.Bind(&params); err != nil {
 		return nil, fmt.Errorf("bind err: %s", err)
@@ -94,7 +78,7 @@ func (common *Service) getPageInfo(c echo.Context) (*pageInfo, error) {
 
 	fmt.Printf("%#v", params)
 
-	return &pageInfo{
+	return &types.PageInfo{
 		Page:     page,
 		PageSize: pageSize,
 	}, nil

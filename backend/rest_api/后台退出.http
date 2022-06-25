@@ -1,3 +1,0 @@
-POST http://localhost:8855/admin/basic/adminLoginout HTTP/1.1
-content-type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySWQiOjI4LCJ1c2VyX25hbWUiOiJhZG1pbiIsImFkbWluIjp0cnVlLCJleHAiOjE2NTYzMzM0NjR9.dABF86SWj_Y3HLqwpYWN1eKZCDMt2-mIvZgwCIynJNc

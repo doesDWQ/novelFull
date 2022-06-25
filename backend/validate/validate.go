@@ -28,6 +28,10 @@ func (cv *customValidator) Validate(i interface{}) error {
 		data.Rules,
 	)
 
+	fmt.Printf("validate:%#v, rules: %#v, errMap:%#v \n", data.Value, data.Rules, errMap)
+
+	fmt.Println("errMapLen,", len(errMap))
+
 	if len(errMap) == 0 {
 		return nil
 	} else {

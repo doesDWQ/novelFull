@@ -1,0 +1,43 @@
+### 编辑后台用户信息
+PUT {{$dotenv host}}/admin/adminUser/37  HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{$dotenv token}}
+
+{
+    "user_name":"dwqadmin4",
+    "pwd":"1234556",
+    "email":"1234@qq.com"
+}
+
+### 获取后台用户列表
+GET {{$dotenv host}}/admin/adminUser  HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{$dotenv token}}
+
+{
+    "page": "1",
+    "pageSize": "10"
+}
+
+
+### 新增后台用户
+POST {{$dotenv host}}/admin/adminUser HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{$dotenv token}}
+
+{
+    "user_name":"dwq",
+    "pwd":"dwq123",
+    "email":"1234@qq.com"
+}
+
+### 删除后台用户
+DELETE {{$dotenv host}}/admin/adminUser/41 HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{$dotenv token}}
+
+### 获取后台用户详情
+GET {{$dotenv host}}/admin/adminUser/28 HTTP/1.1
+content-type: application/json
+Authorization: Bearer {{$dotenv token}}
+
